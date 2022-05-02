@@ -24,6 +24,14 @@ export function parseArtifact(obj: any): IArtifact | undefined {
     setKey, rarity, level, slotKey, mainStatKey, substats, location, exclude, lock,
   } = obj ?? {}
 
+  // FIX: for Inventory Kamera result file.
+  if ( ["sands", "goblet", "circlet"].includes(slotKey)
+    && ['atk', 'def', 'hp'].includes(mainStatKey)
+  ) {
+
+      mainStatKey += '_'
+  }
+
   if (!allArtifactSets.includes(setKey) ||
     !allSlotKeys.includes(slotKey) ||
     !allMainStatKeys.includes(mainStatKey) ||
