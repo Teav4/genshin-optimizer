@@ -16,7 +16,8 @@ export type FilterOption = {
   mainStatKeys: MainStatKey[],
   substats: SubstatKey[]
   location: CharacterKey | "Inventory" | "Equipped" | ""
-  excluded: "excluded" | "included" | "",
+  exclusion: Array<"excluded" | "included">,
+  locked: Array<"locked" | "unlocked">,
 }
 
 type ArtifactSortFilter = {
@@ -24,8 +25,8 @@ type ArtifactSortFilter = {
   ascending: boolean
   sortType: ArtifactSortKey
 }
-export const initialArtifactSortFilter = (): ArtifactSortFilter => ({
-  filterOption: {
+export function initialFilterOption(): FilterOption {
+  return {
     artSetKeys: [],
     rarity: [...allArtifactRarities],
     levelLow: 0,
@@ -34,8 +35,12 @@ export const initialArtifactSortFilter = (): ArtifactSortFilter => ({
     mainStatKeys: [],
     substats: [],
     location: "",
-    excluded: "",
-  },
+    exclusion: ["excluded", "included"],
+    locked: ["locked", "unlocked"],
+  }
+}
+export const initialArtifactSortFilter = (): ArtifactSortFilter => ({
+  filterOption: initialFilterOption(),
   ascending: false,
   sortType: artifactSortKeys[0],
 })
@@ -72,9 +77,14 @@ export function artifactSortConfigs(effFilterSet: Set<SubstatKey>, probabilityFi
 }
 export function artifactFilterConfigs(): FilterConfigs<keyof FilterOption, ICachedArtifact> {
   return {
-    excluded: (art, filter) => {
-      if (filter === "excluded" && !art.exclude) return false
-      if (filter === "included" && art.exclude) return false
+    exclusion: (art, filter) => {
+      if (!filter.includes("included") && !art.exclude) return false
+      if (!filter.includes("excluded") && art.exclude) return false
+      return true
+    },
+    locked: (art, filter) => {
+      if (!filter.includes("locked") && art.lock) return false
+      if (!filter.includes("unlocked") && !art.lock) return false
       return true
     },
     location: (art, filter) => {

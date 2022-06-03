@@ -1,14 +1,13 @@
-import { faInfoCircle } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { PersonAdd } from "@mui/icons-material";
 import { CardContent, CardHeader, Divider, Grid, Typography } from "@mui/material";
 import { Box } from "@mui/system";
 import React, { useContext, useMemo } from 'react';
-import BootstrapTooltip from "../../../Components/BootstrapTooltip";
 import CardLight from "../../../Components/Card/CardLight";
-import CharacterDropdownButton from "../../../Components/Character/CharacterDropdownButton";
+import CharacterCard from "../../../Components/Character/CharacterCard";
+import CharacterAutocomplete from "../../../Components/Character/CharacterAutocomplete";
 import DocumentDisplay from "../../../Components/DocumentDisplay";
 import { NodeFieldDisplay } from "../../../Components/FieldDisplay";
+import InfoTooltip from "../../../Components/InfoTooltip";
 import { ArtifactSheet } from "../../../Data/Artifacts/ArtifactSheet";
 import { resonanceSheets } from "../../../Data/Resonance";
 import { DataContext, dataContextObj } from "../../../DataContext";
@@ -19,12 +18,12 @@ import useCharSelectionCallback from "../../../ReactHooks/useCharSelectionCallba
 import usePromise from "../../../ReactHooks/usePromise";
 import { ElementKey } from "../../../Types/consts";
 import { objPathValue, range } from "../../../Util/Util";
-import CharacterCard from "../../../Components/Character/CharacterCard";
+import { useTranslation } from "react-i18next";
 
 export default function TabTeambuffs() {
   return <Box display="flex" flexDirection="column" gap={1} alignItems="stretch">
     <Grid container spacing={1}>
-      <Grid item xs={12} md={6} lg={3} sx={{ display: "flex", flexDirection:"column", gap: 1 }}>
+      <Grid item xs={12} md={6} lg={3} sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
         <TeamBuffDisplay />
         <ResonanceDisplay />
       </Grid>
@@ -63,13 +62,13 @@ function ResonanceDisplay() {
   const { data } = useContext(DataContext)
   return <>
     {resonanceSheets.map((res, i) => {
-      const icon = <BootstrapTooltip placement="top" title={<Typography>{res.desc}</Typography>}>{<Box component="span" sx={{ cursor: "help" }}><FontAwesomeIcon icon={faInfoCircle} /></Box>}</BootstrapTooltip>
+      const icon = <InfoTooltip title={<Typography>{res.desc}</Typography>} />
       const title = <span>{res.name} {icon}</span>
       return <CardLight key={i} sx={{ opacity: res.canShow(data) ? 1 : 0.5, }}>
         <CardHeader title={title} action={res.icon} titleTypographyProps={{ variant: "subtitle2" }} />
         {res.canShow(data) && <Divider />}
         {res.canShow(data) && <CardContent>
-          <DocumentDisplay sections={res.sections} teamBuffOnly hideDesc/>
+          <DocumentDisplay sections={res.sections} teamBuffOnly hideDesc />
         </CardContent>}
       </CardLight>
     })}
@@ -77,6 +76,7 @@ function ResonanceDisplay() {
 }
 function TeammateDisplay({ index }: { index: number }) {
   const dataContext = useContext(DataContext)
+  const { t } = useTranslation("page_character")
   const { character: active, teamData, characterDispatch: activeCharacterDispatch } = dataContext
   const activeCharacterKey = active.key
   const characterKey = active.team[index]
@@ -84,7 +84,7 @@ function TeammateDisplay({ index }: { index: number }) {
   const onClickHandler = useCharSelectionCallback()
 
   const dataBundle = teamData[characterKey]
-  const teamMateDataContext: dataContextObj | undefined = dataBundle && characterDispatch && {
+  const teamMateDataContext: dataContextObj | undefined = dataBundle && {
     character: dataBundle.character,
     characterSheet: dataBundle.characterSheet,
     data: dataBundle.target,
@@ -94,9 +94,14 @@ function TeammateDisplay({ index }: { index: number }) {
   }
   return <CardLight>
     <CardContent>
-      <CharacterDropdownButton fullWidth value={characterKey}
+      <CharacterAutocomplete fullWidth value={characterKey}
         onChange={charKey => activeCharacterDispatch({ type: "team", index, charKey })}
-        filter={(_, ck) => ck !== activeCharacterKey && !active.team.includes(ck)} unSelectText={`Teammate ${index + 1}`} unSelectIcon={<PersonAdd />} />
+        disable={ck => ck === activeCharacterKey || active.team.includes(ck)}
+        labelText={t("teammate", { count: index + 1 })}
+        defaultText={t("none")}
+        defaultIcon={<PersonAdd />}
+        showDefault
+      />
     </CardContent>
     {teamMateDataContext && <DataContext.Provider value={teamMateDataContext}>
       <CharacterCard characterKey={characterKey}

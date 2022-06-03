@@ -1,9 +1,10 @@
-import { Lock, LockOpen } from "@mui/icons-material"
+import { BusinessCenter, Lock, LockOpen } from "@mui/icons-material"
 import { Box, Button, ButtonGroup, CardContent, CardHeader, Divider, Grid, ListItem, MenuItem, Typography } from "@mui/material"
 import { useCallback, useContext, useEffect, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 import CardDark from "../Components/Card/CardDark"
 import CardLight from "../Components/Card/CardLight"
-import CharacterDropdownButton from "../Components/Character/CharacterDropdownButton"
+import CharacterAutocomplete from "../Components/Character/CharacterAutocomplete"
 import CloseButton from "../Components/CloseButton"
 import CustomNumberInput, { CustomNumberInputButtonGroupWrapper } from "../Components/CustomNumberInput"
 import DocumentDisplay from "../Components/DocumentDisplay"
@@ -24,18 +25,20 @@ import useWeapon from "../ReactHooks/useWeapon"
 import { CharacterKey } from "../Types/consts"
 import { ICachedWeapon } from "../Types/weapon"
 import { clamp } from "../Util/Util"
-import WeaponSwapBtn from "./WeaponSwapBtn"
 
 type WeaponStatsEditorCardProps = {
   weaponId: string
   footer?: boolean
   onClose?: () => void
+  extraButtons?: JSX.Element
 }
 export default function WeaponEditor({
   weaponId: propWeaponId,
   footer = false,
-  onClose
+  onClose,
+  extraButtons
 }: WeaponStatsEditorCardProps) {
+  const { t } = useTranslation("ui")
   const { data } = useContext(DataContext)
 
   const { database } = useContext(DatabaseContext)
@@ -109,8 +112,8 @@ export default function WeaponEditor({
                     {`Refinement ${key + 1}`}
                   </MenuItem>)}
               </DropdownButton>}
+              {extraButtons}
             </ButtonGroup>
-            {data?.get(input.charKey)?.value && <WeaponSwapBtn weaponTypeKey={weaponSheet.weaponType} onChangeId={id => database.setWeaponLocation(id, data.get(input.charKey).value as CharacterKey)} />}
           </Box>
           <Box display="flex" gap={1} flexWrap="wrap" justifyContent="space-between">
             <ButtonGroup sx={{ bgcolor: t => t.palette.contentLight.main }} >
@@ -157,11 +160,11 @@ export default function WeaponEditor({
       </Grid>}
     </CardContent>
     {footer && id && <CardContent sx={{ py: 1 }}>
-      <Grid container>
+      <Grid container spacing={1}>
         <Grid item flexGrow={1}>
-          <CharacterDropdownButton noUnselect inventory value={location} onChange={equipOnChar} filter={filter} />
+          <CharacterAutocomplete showDefault defaultIcon={<BusinessCenter />} defaultText={t("inventory")} value={location} onChange={equipOnChar} filter={filter} />
         </Grid>
-        {!!onClose && <Grid item><CloseButton large onClick={onClose} /></Grid>}
+        {!!onClose && <Grid item><CloseButton sx={{ height: "100%" }} large onClick={onClose} /></Grid>}
       </Grid>
     </CardContent>}
   </CardLight ></ModalWrapper>

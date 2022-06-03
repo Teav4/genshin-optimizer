@@ -236,7 +236,7 @@ export class UIData {
       case "max": formula = fStr`Max( ${{ operands }} )`; break
       case "min": formula = fStr`Min( ${{ operands }} )`; break
       case "add": formula = fStr`${{ operands, separator: ' + ' }}`; break
-      case "mul": formula = fStr`${{ operands, separator: ' * ', shouldWrap }}`; break
+      case "mul": formula = fStr`${{ operands, separator: ' * ', shouldWrap: operands.length > 1 }}`; break
       case "sum_frac": formula = fStr`${{ operands: [operands[0]], shouldWrap }} / ( ${{ operands, separator: ' + ' }} )`; break
       case "res": {
         const base = operands[0].value
@@ -351,14 +351,15 @@ function mergeFormulaComponents(components: Displayable[]): Displayable {
 }
 /*/
 function createDisplay(node: ContextNodeDisplay<number | string | undefined>) {
-  const { key, value, formula, prefix, source, variant, fixed } = node
+  const { info, value, formula } = node
+  const { key, prefix, source, fixed } = info
   if (typeof value !== "number") return
   node.valueDisplay = valueString(value, KeyMap.unit(key), fixed)
   if (key && key !== '_') {
     const prefixDisplay = (prefix && !source) ? `${KeyMap.getPrefixStr(prefix)} ` : ""
     // TODO: Convert `source` key to actual name
     const sourceDisplay = source ? ` ${source}` : ""
-    node.name = `${prefixDisplay}${KeyMap.getNoUnit(key!)}${sourceDisplay}`
+    node.name = `${prefixDisplay}${KeyMap.getStr(key!)}${sourceDisplay}`
 
     if (formula)
       node.assignment = `${node.name} ${node.valueDisplay} = ${formula}`
@@ -390,7 +391,7 @@ interface ContextNodeDisplay<V = number> {
 
   dependencies: Set<Displayable>
 
-  mayNeedWrapping: boolean
+  mayNeedWrapping: boolean // Whether this formula should be parenthesized when it is a part of multiplications/divisions and subtractions' subtrahends
 
   // Don't set these manually outside of `UIData.computeNode`
   name?: Displayable

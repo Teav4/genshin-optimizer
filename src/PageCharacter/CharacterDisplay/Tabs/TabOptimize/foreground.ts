@@ -4,7 +4,7 @@ import { computeUIData } from "../../../../Formula/api";
 import { formulaString } from "../../../../Formula/debug";
 import { Data, NumNode } from "../../../../Formula/type";
 import { constant, setReadNodeKeys } from "../../../../Formula/utils";
-import { allMainStatKeys, allSubstats, ICachedArtifact } from "../../../../Types/artifact";
+import { allMainStatKeys, allSubstatKeys, ICachedArtifact } from "../../../../Types/artifact";
 import { allSlotKeys, ArtifactSetKey } from "../../../../Types/consts";
 import { deepClone, objectKeyMap, objectMap } from "../../../../Util/Util";
 import type { ArtifactBuildData, ArtifactsBySlot, DynStat, RequestFilter } from "./background";
@@ -12,7 +12,7 @@ import { countBuilds, filterArts } from "./common";
 
 const dynamic = setReadNodeKeys(deepClone({ dyn: { ...input.art, ...input.artSet } }))
 export const dynamicData = {
-  art: objectKeyMap([...allMainStatKeys, ...allSubstats], key => dynamic.dyn[key]),
+  art: objectKeyMap([...allMainStatKeys, ...allSubstatKeys], key => dynamic.dyn[key]),
   artSet: objectMap(input.artSet, (_, key) => dynamic.dyn[key]),
 }
 
@@ -40,6 +40,8 @@ export function compactArtifacts(arts: ICachedArtifact[], mainStatAssumptionLeve
     Object.keys(data.values).forEach(x => keys.add(x))
   }
   result.base = objectKeyMap([...keys], _ => 0)
+  for (const value of Object.values(result.values))
+    value.push({ id: "", values: {} })
   return result
 }
 // TODO: Use this as the new set filter
